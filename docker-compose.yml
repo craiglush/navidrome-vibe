@@ -10,3 +10,15 @@ services:
     restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  analyzer:
+    build: ./analyzer
+    container_name: vibe-analyzer
+    env_file: .env
+    environment:
+      ANALYSIS_DB_PATH: /data/analysis.db
+      MUSIC_ROOT: /music
+    volumes:
+      - ./data:/data
+      - "${MUSIC_DIR:-./music}:/music:ro"
+    restart: unless-stopped

@@ -11,11 +11,10 @@ in every Subsonic client (the Navidrome web UI, Symfonium, Feishin, play:Sub, �
 **Local-first.** The LLM defaults to your own [Ollama](https://ollama.com). No GPU? Point it at
 a cheap hosted model (Claude Haiku, or any OpenAI-compatible endpoint) — one line of config.
 
-> **Status:** the companion app + JSON API + web UI are functional and covered by tests. The
-> bundled **essentia analyzer** (which populates the analysis DB) and a **Navidrome plugin**
-> (vibe-aware Instant Mix + scheduled "Vibe of the Day") are on the [roadmap](#roadmap). Until
-> the analyzer ships, you bring your own `track_analysis` SQLite DB (schema in
-> [`app/vibe/analysis_db.py`](app/vibe/analysis_db.py)).
+> **Status:** the companion app and the **essentia analyzer** are functional. Bring up both
+> with `docker compose up -d`, point the analyzer at your music library (`MUSIC_DIR`), and it
+> populates the analysis DB. A **Navidrome plugin** (vibe-aware Instant Mix + scheduled packs)
+> is still on the [roadmap](#roadmap).
 
 ## How it works
 
@@ -58,7 +57,8 @@ docker compose up -d
 ## Requirements
 
 - A running **Navidrome** (or any Subsonic-compatible server) and an account on it.
-- A populated **`track_analysis`** SQLite DB at `ANALYSIS_DB_PATH` (see Status note above).
+- The bundled **analyzer** service (set `MUSIC_DIR` to your library) populates the analysis DB
+  on first run; or bring your own `track_analysis` SQLite DB.
 - An **LLM endpoint**: a local Ollama (default) *or* a hosted OpenAI-compatible / Anthropic key.
 
 ## Configuration
@@ -76,6 +76,19 @@ All configuration is via environment variables — see [`.env.example`](.env.exa
 | `ANALYSIS_DB_PATH` / `VIBE_DB_PATH` | `/data/analysis.db` / `/data/vibe.db` | SQLite paths |
 | `VIBE_API_TOKEN` | – | If set, `/api/vibe` requires `Authorization: Bearer <token>` |
 | `VIBE_PORT` | `4546` | Web UI / API port |
+
+## Analyzer
+
+The `analyzer` service scans `MUSIC_DIR` with essentia-tensorflow and writes per-track mood,
+BPM, energy and danceability into the shared analysis DB. It scans on startup
+(`SCAN_ON_START=true`) and can be re-triggered:
+
+    curl -X POST http://localhost:8000/api/scan
+    # or one-shot:
+    docker compose run --rm analyzer python -m analyzer scan
+
+Analysis runs on CPU (no GPU required). The first full scan of a large library takes a while;
+subsequent scans skip already-analyzed files.
 
 ## API
 
@@ -100,7 +113,7 @@ PYTHONPATH=. .venv/bin/pytest -q
 
 ## Roadmap
 
-- [ ] Bundled **essentia analyzer** service (populates `track_analysis` from your library)
+- [x] Bundled **essentia analyzer** service (populates `track_analysis` from your library)
 - [ ] **Navidrome plugin** — vibe-aware Instant Mix + scheduled "Vibe of the Day" packs
 - [ ] Optional multi-user / public-playlist sharing
 - [ ] Save & re-run favourite vibes

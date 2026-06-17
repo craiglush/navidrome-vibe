@@ -2,4 +2,4 @@ fastapi==0.115.0
 uvicorn==0.34.0
 essentia-tensorflow==2.1b6.dev1389
 mutagen==1.47.0
-numpy==2.0.2
+numpy>=2.0
