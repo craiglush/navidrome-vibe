@@ -55,9 +55,13 @@ def create_app(cfg: AnalyzerConfig = None) -> FastAPI:
 
     @app.post("/api/analysis/file")
     def analysis_file(req: AnalyzeRequest):
-        if not os.path.exists(req.file_path):
+        music_root = os.path.abspath(cfg.music_root)
+        requested = os.path.abspath(req.file_path)
+        if requested != music_root and not requested.startswith(music_root + os.sep):
+            raise HTTPException(status_code=400, detail="file must be within MUSIC_ROOT")
+        if not os.path.exists(requested):
             raise HTTPException(status_code=404, detail="file not found")
-        return analyze_file(req.file_path, cfg.models_dir)
+        return analyze_file(requested, cfg.models_dir)
 
     @app.post("/api/scan", status_code=202)
     def scan():
