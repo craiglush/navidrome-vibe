@@ -71,7 +71,10 @@ def parse_llm_response(raw_text: str):
             continue
         if not isinstance(bounds, (list, tuple)) or len(bounds) != 2:
             continue
-        lo, hi = float(bounds[0]), float(bounds[1])
+        try:
+            lo, hi = float(bounds[0]), float(bounds[1])
+        except (TypeError, ValueError):
+            continue
         feat_lo, feat_hi = FEATURES[feature]["range"]
         lo = max(feat_lo, min(feat_hi, lo))
         hi = max(feat_lo, min(feat_hi, hi))

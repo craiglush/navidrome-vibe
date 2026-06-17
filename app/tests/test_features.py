@@ -43,3 +43,16 @@ def test_parse_no_json_raises():
 def test_parse_empty_ranges_raises():
     with pytest.raises(ValueError):
         parse_llm_response('{"ranges": {}, "reasoning": "nothing"}')
+
+
+def test_parse_skips_non_numeric_bounds():
+    raw = '{"ranges": {"mood_happy": [null, 0.5], "energy": [0.1, 0.3]}, "reasoning": "x"}'
+    ranges, _ = parse_llm_response(raw)
+    assert ranges == {"energy": [0.1, 0.3]}
+
+
+def test_parse_all_non_numeric_raises():
+    import pytest
+    raw = '{"ranges": {"mood_happy": ["a", "b"]}, "reasoning": "x"}'
+    with pytest.raises(ValueError):
+        parse_llm_response(raw)
