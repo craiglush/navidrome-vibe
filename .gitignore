@@ -11,3 +11,5 @@ tmp/
 venv/
 *.egg-info/
 music/
+plugin/plugin.wasm
+plugin/*.ndp
