@@ -45,3 +45,50 @@ def test_index_served(cfg, monkeypatch):
     resp = client.get("/")
     assert resp.status_code == 200
     assert b"vibe" in resp.data.lower()
+
+
+def test_vibe_rejects_non_integer_count(cfg, monkeypatch):
+    client = _app(cfg, monkeypatch)
+    resp = client.post("/api/vibe", json={"prompt": "x", "count": "abc"})
+    assert resp.status_code == 400
+
+
+def test_vibe_rejects_zero_count(cfg, monkeypatch):
+    client = _app(cfg, monkeypatch)
+    resp = client.post("/api/vibe", json={"prompt": "x", "count": 0})
+    assert resp.status_code == 400
+
+
+def test_vibe_value_error_is_422(cfg, monkeypatch):
+    import server as server_mod
+    def boom(scenario, *, cfg, analysis_db, client, count=30,
+             excluded_genres=None, progress_cb=None):
+        raise ValueError("LLM returned no valid feature ranges")
+    monkeypatch.setattr(server_mod, "generate_vibe_playlist", boom)
+    app = server_mod.create_app(cfg)
+    app.config.update(TESTING=True)
+    resp = app.test_client().post("/api/vibe", json={"prompt": "x"})
+    assert resp.status_code == 422
+    assert "valid feature ranges" in resp.get_json()["error"]
+
+
+def test_vibe_generic_error_is_500_without_leak(cfg, monkeypatch):
+    import server as server_mod
+    def boom(scenario, *, cfg, analysis_db, client, count=30,
+             excluded_genres=None, progress_cb=None):
+        raise KeyError("secret-internal-detail")
+    monkeypatch.setattr(server_mod, "generate_vibe_playlist", boom)
+    app = server_mod.create_app(cfg)
+    app.config.update(TESTING=True)
+    resp = app.test_client().post("/api/vibe", json={"prompt": "x"})
+    assert resp.status_code == 500
+    assert "secret-internal-detail" not in resp.get_data(as_text=True)
+
+
+def test_history_failure_does_not_fail_request(cfg, monkeypatch):
+    import server as server_mod
+    monkeypatch.setattr(server_mod.VibeHistory, "save",
+                        lambda *a, **k: (_ for _ in ()).throw(Exception("db boom")))
+    client = _app(cfg, monkeypatch)
+    resp = client.post("/api/vibe", json={"prompt": "rainy day"})
+    assert resp.status_code == 200
