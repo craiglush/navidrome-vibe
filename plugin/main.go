@@ -64,7 +64,10 @@ func refreshVibes() int32 {
 }
 
 func generateVibe(appURL, apiToken, prompt string, count int) error {
-	reqBody, _ := json.Marshal(map[string]interface{}{"prompt": prompt, "count": count})
+	// async:true -> the app returns 202 immediately and generates the playlist
+	// in the background, so this call returns well within Navidrome's scheduler
+	// callback deadline (~30s) instead of blocking on the slow LLM.
+	reqBody, _ := json.Marshal(map[string]interface{}{"prompt": prompt, "count": count, "async": true})
 	headers := map[string]string{"Content-Type": "application/json"}
 	if apiToken != "" {
 		headers["Authorization"] = "Bearer " + apiToken
@@ -74,12 +77,12 @@ func generateVibe(appURL, apiToken, prompt string, count int) error {
 		Method:    "POST",
 		Body:      reqBody,
 		Headers:   headers,
-		TimeoutMs: 180000,
+		TimeoutMs: 15000,
 	})
 	if err != nil {
 		return fmt.Errorf("HTTP request failed: %w", err)
 	}
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != 200 && resp.StatusCode != 202 {
 		return fmt.Errorf("app returned status %d", resp.StatusCode)
 	}
 	return nil

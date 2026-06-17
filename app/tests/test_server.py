@@ -92,3 +92,27 @@ def test_history_failure_does_not_fail_request(cfg, monkeypatch):
     client = _app(cfg, monkeypatch)
     resp = client.post("/api/vibe", json={"prompt": "rainy day"})
     assert resp.status_code == 200
+
+
+def test_vibe_async_returns_202_and_runs_in_background(cfg, monkeypatch):
+    import threading
+    done = threading.Event()
+    calls = []
+
+    def fake_generate(scenario, *, cfg, analysis_db, client, count=30,
+                      excluded_genres=None, progress_cb=None):
+        calls.append(scenario)
+        done.set()
+        return {"playlist_id": "p", "playlist_name": "V", "track_count": 1,
+                "reasoning": "", "ranges": {}, "tracks": [], "starred_count": 0}
+
+    monkeypatch.setattr(server_mod, "generate_vibe_playlist", fake_generate)
+    app = server_mod.create_app(cfg)
+    app.config.update(TESTING=True)
+    client = app.test_client()
+
+    resp = client.post("/api/vibe", json={"prompt": "rainy", "async": True})
+    assert resp.status_code == 202
+    assert resp.get_json()["status"] == "accepted"
+    assert done.wait(timeout=5), "background generation did not run"
+    assert calls == ["rainy"]
