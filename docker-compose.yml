@@ -1,0 +1,12 @@
+services:
+  vibe:
+    build: ./app
+    container_name: vibe-playlists
+    ports:
+      - "${VIBE_PORT:-4546}:4546"
+    env_file: .env
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
