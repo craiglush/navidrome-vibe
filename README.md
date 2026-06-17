@@ -4,7 +4,7 @@
 
 Type a scenario like *"rainy evening reading a book"* or *"Friday night pre-drinks"* and Vibe
 Playlists turns it into a real playlist in your music server. An LLM translates your words into
-**human-readable audio-feature ranges** (mood, energy, danceability, BPM, arousal, valence …),
+**human-readable audio-feature ranges** (mood, energy, danceability, BPM, and genre context),
 matches them against an essentia analysis of your library, and creates a playlist that shows up
 in every Subsonic client (the Navidrome web UI, Symfonium, Feishin, play:Sub, …).
 
@@ -79,16 +79,20 @@ All configuration is via environment variables — see [`.env.example`](.env.exa
 
 ## Analyzer
 
-The `analyzer` service scans `MUSIC_DIR` with essentia-tensorflow and writes per-track mood,
-BPM, energy and danceability into the shared analysis DB. It scans on startup
-(`SCAN_ON_START=true`) and can be re-triggered:
+The `analyzer` service scans `MUSIC_DIR` with essentia-tensorflow and writes per-track features
+into the shared analysis DB. It extracts **BPM, energy, danceability, and 5 moods** (happy, sad,
+relaxed, aggressive, party), with genre/BPM context boosts. (Arousal and valence are deferred —
+stored as 0.0 for schema compatibility.)
 
-    curl -X POST http://localhost:8000/api/scan
-    # or one-shot:
+It scans on startup (`SCAN_ON_START=true`); to re-trigger:
+
+    # one-shot scan (recommended):
     docker compose run --rm analyzer python -m analyzer scan
 
-Analysis runs on CPU (no GPU required). The first full scan of a large library takes a while;
-subsequent scans skip already-analyzed files.
+The analyzer's HTTP API (port 8000) is internal to the compose network and not published by
+default. During an active scan, the app's read queries may briefly wait (SQLite WAL, 30s timeout)
+— this is normal. Analysis runs on CPU (no GPU required); the first full scan of a large library
+takes a while, and subsequent scans skip already-analyzed files.
 
 ## API
 
