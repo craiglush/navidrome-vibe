@@ -94,6 +94,23 @@ default. During an active scan, the app's read queries may briefly wait (SQLite 
 — this is normal. Analysis runs on CPU (no GPU required); the first full scan of a large library
 takes a while, and subsequent scans skip already-analyzed files.
 
+## Navidrome plugin (optional)
+
+A thin Navidrome plugin generates **"Vibe of the Day"** playlists on a schedule by calling this
+app's `/api/vibe` for each prompt you configure. It surfaces vibe playlists natively in
+Navidrome with no interaction required.
+
+Requires Navidrome 0.60+ with plugins enabled (`ND_PLUGINS_ENABLED=true`).
+
+1. Build it: `cd plugin && make docker-build` (produces `vibe-playlists.ndp`), or download from Releases.
+2. Copy `vibe-playlists.ndp` into your Navidrome `plugins/` directory and restart Navidrome.
+3. In **Settings → Plugins → Vibe Playlists**, set the **Companion App URL** (e.g. `http://vibe:4546`),
+   your **vibe prompts** (one per line), and the **refresh schedule**.
+
+The interactive "type any vibe" experience lives in the companion app's web UI; the plugin is for
+scheduled, hands-off playlists. (Instant Mix is provided by the separate
+[navidrome-mood-plugin](https://github.com/craiglush/navidrome-mood-plugin).)
+
 ## API
 
 ```http
@@ -118,7 +135,7 @@ PYTHONPATH=. .venv/bin/pytest -q
 ## Roadmap
 
 - [x] Bundled **essentia analyzer** service (populates `track_analysis` from your library)
-- [ ] **Navidrome plugin** — vibe-aware Instant Mix + scheduled "Vibe of the Day" packs
+- [x] **Navidrome plugin** — scheduled "Vibe of the Day" packs
 - [ ] Optional multi-user / public-playlist sharing
 - [ ] Save & re-run favourite vibes
 
