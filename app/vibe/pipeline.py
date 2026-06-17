@@ -41,12 +41,14 @@ def _build_id_map_search(client, scored_items):
     for item in scored_items:
         t = item["track"]
         query = (t.get("title", "") + " " + t.get("artist", "")).strip()
+        if not query:
+            continue
         try:
             res = client.search(query, song_count=3)
             if res:
                 id_map[t["file_path"]] = res[0]["id"]
-        except Exception:
-            pass
+        except Exception as e:
+            log.warning("search fallback failed for %r: %s", query, e)
     return id_map
 
 
@@ -120,8 +122,8 @@ def generate_vibe_playlist(scenario, *, cfg, analysis_db, client,
             if pl.get("name") == name:
                 client.delete_playlist(pl["id"])
                 break
-    except Exception:
-        pass
+    except Exception as e:
+        log.warning("could not check/delete existing playlist: %s", e)
     progress("Creating playlist with " + str(len(selected)) + " tracks...")
     playlist_id = client.create_playlist(name, song_ids)
     progress('Playlist "' + name + '" created (' + str(len(selected)) + ' tracks)')

@@ -51,3 +51,27 @@ def test_generate_raises_when_no_analyzed_tracks(cfg, tmp_path, monkeypatch):
         assert False, "expected RuntimeError"
     except RuntimeError as e:
         assert "analyzed" in str(e).lower()
+
+
+def test_generate_deletes_existing_same_name_playlist(cfg, analysis_db, monkeypatch):
+    monkeypatch.setattr(pipeline, "interpret_scenario",
+        lambda s, c: '{"ranges": {"mood_relaxed": [0.6, 1.0]}, "reasoning": "calm"}')
+    monkeypatch.setattr(pipeline, "generate_title", lambda d, c: "Calm Vibes")
+
+    deleted = []
+
+    class ClientWithDup:
+        def get_all_songs(self):
+            return [{"id": "nd-a", "title": "Calm One", "artist": "Artist A"}]
+        def get_starred(self):
+            return []
+        def get_playlists(self):
+            return [{"id": "old-1", "name": "Calm Vibes"}]
+        def delete_playlist(self, pid):
+            deleted.append(pid)
+        def create_playlist(self, name, song_ids):
+            return "pl-new"
+
+    pipeline.generate_vibe_playlist("quiet", cfg=cfg, analysis_db=analysis_db,
+                                    client=ClientWithDup(), count=5)
+    assert "old-1" in deleted
