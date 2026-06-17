@@ -41,6 +41,12 @@
           "default": 30,
           "minimum": 5,
           "maximum": 200
+        },
+        "instant_vibe": {
+          "type": "string",
+          "title": "Instant Vibe",
+          "description": "Type a vibe and click Save to generate ONE playlist from it right now (on top of the scheduled ones). Change the text and Save again to make another.",
+          "default": ""
         }
       }
     },
@@ -68,6 +74,13 @@
               ]
             }
           ]
+        },
+        {
+          "type": "Group",
+          "label": "Instant Vibe (type + Save to generate now)",
+          "elements": [
+            { "type": "Control", "scope": "#/properties/instant_vibe" }
+          ]
         }
       ]
     }
@@ -82,6 +95,9 @@
     },
     "config": {
       "reason": "Read the companion app URL, prompts and schedule"
+    },
+    "kvstore": {
+      "reason": "Remember the last Instant Vibe prompt so it is not regenerated on restart"
     }
   }
 }

@@ -114,6 +114,11 @@ Requires Navidrome 0.60+ with plugins enabled (`ND_PLUGINS_ENABLED=true`).
 > config to defaults**. After every plugin update, re-enable it and re-check the Companion App URL,
 > prompts, and schedule.
 
+**Instant Vibe:** to generate a single playlist on demand from inside Navidrome, type a prompt into
+the plugin's **Instant Vibe** settings field and click **Save** — saving re-runs the plugin and
+generates that one playlist (it won't repeat on restart unless you change the text). The richer
+"type any vibe" box with live results is in the companion app's web UI.
+
 The interactive "type any vibe" experience lives in the companion app's web UI; the plugin is for
 scheduled, hands-off playlists. Generation runs **asynchronously** (the app returns immediately and
 builds the playlist in the background), so it stays within Navidrome's scheduler-callback deadline.

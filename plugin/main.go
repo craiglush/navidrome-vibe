@@ -5,6 +5,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/navidrome/navidrome/plugins/pdk/go/host"
 	"github.com/navidrome/navidrome/plugins/pdk/go/metadata"
@@ -29,8 +30,35 @@ func onInit() int32 {
 	} else {
 		pdk.Log(pdk.LogInfo, "Scheduled vibe refresh: "+schedule)
 	}
+	maybeRunInstant()
 	pdk.Log(pdk.LogInfo, "Vibe Playlists plugin initialized")
 	return 0
+}
+
+// maybeRunInstant generates a one-off playlist for the "Instant Vibe" config
+// field. Saving the settings re-runs nd_on_init, so this is the closest thing
+// to a "generate now" button the plugin API allows. A plugin can't clear its
+// own config, so we dedup against the last value in KVStore: it fires only when
+// the prompt actually changed, not on every restart/reload.
+func maybeRunInstant() {
+	prompt := strings.TrimSpace(configString("instant_vibe", ""))
+	if prompt == "" {
+		return
+	}
+	if last, ok, _ := host.KVStoreGet("last_instant_vibe"); ok && string(last) == prompt {
+		return // unchanged since last run
+	}
+	if err := host.KVStoreSet("last_instant_vibe", []byte(prompt)); err != nil {
+		pdk.Log(pdk.LogWarn, "Could not record instant vibe: "+err.Error())
+	}
+	pdk.Log(pdk.LogInfo, "Instant Vibe requested: "+prompt)
+	err := generateVibe(configString("app_url", "http://vibe:4546"),
+		configString("api_token", ""), prompt, configInt("tracks_per_playlist", 30))
+	if err != nil {
+		pdk.Log(pdk.LogError, "Instant Vibe failed: "+err.Error())
+	} else {
+		pdk.Log(pdk.LogInfo, "Instant Vibe submitted: "+prompt)
+	}
 }
 
 // Navidrome requires the export name `nd_scheduler_callback` for the scheduler
