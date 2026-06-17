@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/navidrome/navidrome/refs/heads/master/plugins/manifest-schema.json",
+  "name": "Vibe Playlists",
+  "id": "vibe-playlists",
+  "author": "Craig Lusher",
+  "version": "0.1.0",
+  "description": "Scheduled AI 'Vibe of the Day' playlists. Generates playlists from natural-language vibe prompts by calling the Vibe Playlists companion app, which translates each prompt into audio-feature ranges and builds the playlist from your library's essentia analysis.",
+  "website": "https://github.com/craiglush/navidrome-vibe",
+  "config": {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "app_url": {
+          "type": "string",
+          "title": "Companion App URL",
+          "description": "Base URL of the Vibe Playlists companion app (e.g. http://vibe:4546)",
+          "default": "http://vibe:4546"
+        },
+        "api_token": {
+          "type": "string",
+          "title": "App API Token",
+          "description": "Bearer token if the companion app sets VIBE_API_TOKEN (leave blank if unset)",
+          "default": ""
+        },
+        "vibe_prompts": {
+          "type": "string",
+          "title": "Vibe Prompts (one per line)",
+          "description": "Each line becomes a refreshed playlist, e.g. 'Lazy Sunday morning with coffee'",
+          "default": "Lazy Sunday morning with coffee\nRainy evening reading a book\nFriday night pre-drinks energy\nDeep focus work session"
+        },
+        "refresh_schedule": {
+          "type": "string",
+          "title": "Refresh Schedule (cron)",
+          "description": "When to regenerate the vibe playlists",
+          "default": "0 5 * * *"
+        },
+        "tracks_per_playlist": {
+          "type": "integer",
+          "title": "Tracks per Playlist",
+          "description": "Number of tracks per vibe playlist",
+          "default": 30,
+          "minimum": 5,
+          "maximum": 200
+        }
+      }
+    },
+    "uiSchema": {
+      "type": "VerticalLayout",
+      "elements": [
+        {
+          "type": "Group",
+          "label": "Companion App",
+          "elements": [
+            { "type": "Control", "scope": "#/properties/app_url" },
+            { "type": "Control", "scope": "#/properties/api_token" }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "Vibe Playlists",
+          "elements": [
+            { "type": "Control", "scope": "#/properties/vibe_prompts", "options": { "multi": true } },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                { "type": "Control", "scope": "#/properties/refresh_schedule" },
+                { "type": "Control", "scope": "#/properties/tracks_per_playlist" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "permissions": {
+    "http": {
+      "reason": "Call the Vibe Playlists companion app to generate playlists",
+      "requiredHosts": ["*"]
+    },
+    "scheduler": {
+      "reason": "Periodically refresh the vibe playlists"
+    },
+    "config": {
+      "reason": "Read the companion app URL, prompts and schedule"
+    }
+  }
+}
