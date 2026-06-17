@@ -2,6 +2,10 @@
 
 **Describe a vibe, get a playlist — for [Navidrome](https://www.navidrome.org/) & any Subsonic server.**
 
+![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue) &nbsp;![Navidrome 0.60+](https://img.shields.io/badge/Navidrome-0.60%2B-blue) &nbsp;![Subsonic compatible](https://img.shields.io/badge/Subsonic-compatible-success) &nbsp;![Local-first](https://img.shields.io/badge/LLM-local--first%20(Ollama)-d4a039)
+
+*Demo GIF coming — shot list in [`docs/promo/repo-polish.md`](docs/promo/repo-polish.md).*
+
 Type a scenario like *"rainy evening reading a book"* or *"Friday night pre-drinks"* and Vibe
 Playlists turns it into a real playlist in your music server. An LLM translates your words into
 **human-readable audio-feature ranges** (mood, energy, danceability, BPM, and genre context),
@@ -11,10 +15,11 @@ in every Subsonic client (the Navidrome web UI, Symfonium, Feishin, play:Sub, �
 **Local-first.** The LLM defaults to your own [Ollama](https://ollama.com). No GPU? Point it at
 a cheap hosted model (Claude Haiku, or any OpenAI-compatible endpoint) — one line of config.
 
-> **Status:** the companion app and the **essentia analyzer** are functional. Bring up both
-> with `docker compose up -d`, point the analyzer at your music library (`MUSIC_DIR`), and it
-> populates the analysis DB. A **Navidrome plugin** (vibe-aware Instant Mix + scheduled packs)
-> is still on the [roadmap](#roadmap).
+> **Status:** early but working (v0.1). All three parts — the companion app, the **essentia
+> analyzer**, and the **Navidrome plugin** — are built and verified end-to-end against a live
+> Navidrome 0.62 with an ~11k-track library. It's solo and not yet battle-tested on other setups,
+> so issues and feedback are very welcome. The analyzer must scan your library once before
+> playlists work.
 
 ## How it works
 
