@@ -104,11 +104,20 @@ Requires Navidrome 0.60+ with plugins enabled (`ND_PLUGINS_ENABLED=true`).
 
 1. Build it: `cd plugin && make docker-build` (produces `vibe-playlists.ndp`), or download from Releases.
 2. Copy `vibe-playlists.ndp` into your Navidrome `plugins/` directory and restart Navidrome.
-3. In **Settings → Plugins → Vibe Playlists**, set the **Companion App URL** (e.g. `http://vibe:4546`),
-   your **vibe prompts** (one per line), and the **refresh schedule**.
+3. In **Settings → Plugins → Vibe Playlists**, approve permissions, then set the
+   **Companion App URL**, your **vibe prompts** (one per line), and the **refresh schedule**.
+   - Use `http://vibe:4546` only if the plugin's Navidrome and this app share a Docker network.
+     If the app runs as a **separate stack** (the common case), use `http://host.docker.internal:4546`
+     (Docker Desktop) or your host's LAN address.
+
+> **Heads-up:** updating the `.ndp` (any rebuild) makes Navidrome **disable the plugin and reset its
+> config to defaults**. After every plugin update, re-enable it and re-check the Companion App URL,
+> prompts, and schedule.
 
 The interactive "type any vibe" experience lives in the companion app's web UI; the plugin is for
-scheduled, hands-off playlists. (Instant Mix is provided by the separate
+scheduled, hands-off playlists. Generation runs **asynchronously** (the app returns immediately and
+builds the playlist in the background), so it stays within Navidrome's scheduler-callback deadline.
+(Instant Mix is provided by the separate
 [navidrome-mood-plugin](https://github.com/craiglush/navidrome-mood-plugin).)
 
 ## API
