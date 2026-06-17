@@ -33,17 +33,13 @@ func onInit() int32 {
 	return 0
 }
 
-//go:wasmexport nd_on_schedule
-func onSchedule() int32 {
-	payload := string(pdk.Input())
-	pdk.Log(pdk.LogInfo, "Scheduled task triggered: "+payload)
-	switch payload {
-	case "refresh-vibes":
-		return refreshVibes()
-	default:
-		pdk.Log(pdk.LogWarn, "Unknown schedule payload: "+payload)
-		return 0
-	}
+// Navidrome requires the export name `nd_scheduler_callback` for the scheduler
+// permission. We schedule a single recurring job, so we just refresh on any
+// callback rather than dispatching on the payload.
+//go:wasmexport nd_scheduler_callback
+func ndSchedulerCallback() int32 {
+	pdk.Log(pdk.LogInfo, "Scheduler callback fired; refreshing vibe playlists")
+	return refreshVibes()
 }
 
 func refreshVibes() int32 {
