@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vibe Playlists</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="wrap">
+    <h1>Vibe&nbsp;Playlists</h1>
+    <p class="sub">Describe a vibe — get a Navidrome playlist.</p>
+    <form id="vibe-form">
+      <textarea id="prompt" rows="3" placeholder="e.g. lazy Sunday morning with coffee"></textarea>
+      <div class="row">
+        <label>Tracks <input id="count" type="number" value="30" min="5" max="200"></label>
+        <button type="submit" id="go">Create playlist</button>
+      </div>
+    </form>
+    <div id="status" class="status" hidden></div>
+    <div id="result" class="result" hidden></div>
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
