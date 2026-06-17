@@ -4,12 +4,14 @@ import vibe.pipeline as pipeline
 class FakeClient:
     def __init__(self):
         self.created = None
-    def get_all_songs(self):
-        return [
+    def search(self, query, song_count=5):
+        songs = [
             {"id": "nd-a", "title": "Calm One", "artist": "Artist A"},
             {"id": "nd-b", "title": "Party Two", "artist": "Artist B"},
             {"id": "nd-c", "title": "Sad Three", "artist": "Artist C"},
         ]
+        q = query.lower()
+        return [s for s in songs if s["title"].lower() in q]
     def get_starred(self):
         return [{"id": "nd-a"}]
     def get_playlists(self):
@@ -61,8 +63,9 @@ def test_generate_deletes_existing_same_name_playlist(cfg, analysis_db, monkeypa
     deleted = []
 
     class ClientWithDup:
-        def get_all_songs(self):
-            return [{"id": "nd-a", "title": "Calm One", "artist": "Artist A"}]
+        def search(self, query, song_count=5):
+            s = {"id": "nd-a", "title": "Calm One", "artist": "Artist A"}
+            return [s] if s["title"].lower() in query.lower() else []
         def get_starred(self):
             return []
         def get_playlists(self):

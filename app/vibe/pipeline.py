@@ -9,46 +9,33 @@ import logging
 
 from vibe.features import parse_llm_response
 from vibe.llm import generate_title, interpret_scenario
-from vibe.scoring import boost_starred, normalize_key, score_tracks
+from vibe.scoring import boost_starred, score_tracks
 
 log = logging.getLogger(__name__)
 
 
-def _build_id_map(client, scored_items):
-    """Map analysis file_path -> Subsonic song id by normalized title+artist."""
-    try:
-        songs = client.get_all_songs()
-    except Exception as e:
-        log.warning("get_all_songs failed, falling back to per-track search: %s", e)
-        return _build_id_map_search(client, scored_items)
+def _build_id_map(client, scored_items, max_needed):
+    """Map analysis tracks -> Subsonic song ids via per-track search3.
 
-    lookup = {}
-    for s in songs:
-        key = normalize_key(s.get("title", ""), s.get("artist", ""))
-        lookup.setdefault(key, s.get("id"))
-
+    Bounded by candidate count, NOT library size, so it scales to large
+    libraries (fetching the whole library per request does not). Stops once
+    max_needed tracks are mapped.
+    """
     id_map = {}
     for item in scored_items:
-        t = item["track"]
-        nd_id = lookup.get(normalize_key(t.get("title", ""), t.get("artist", "")))
-        if nd_id:
-            id_map[t["file_path"]] = nd_id
-    return id_map
-
-
-def _build_id_map_search(client, scored_items):
-    id_map = {}
-    for item in scored_items:
+        if len(id_map) >= max_needed:
+            break
         t = item["track"]
         query = (t.get("title", "") + " " + t.get("artist", "")).strip()
         if not query:
             continue
         try:
             res = client.search(query, song_count=3)
-            if res:
-                id_map[t["file_path"]] = res[0]["id"]
         except Exception as e:
-            log.warning("search fallback failed for %r: %s", query, e)
+            log.warning("search failed for %r: %s", query, e)
+            continue
+        if res:
+            id_map[t["file_path"]] = res[0]["id"]
     return id_map
 
 
@@ -83,7 +70,7 @@ def generate_vibe_playlist(scenario, *, cfg, analysis_db, client,
 
     # 4. Match to Subsonic ids
     progress("Matching tracks to your Navidrome library...")
-    id_map = _build_id_map(client, top)
+    id_map = _build_id_map(client, top, count * 2)
 
     # 5. Starred boost
     starred_ids = set()
