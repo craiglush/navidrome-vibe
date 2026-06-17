@@ -21,7 +21,7 @@ at a cheap hosted model (Claude Haiku, or any OpenAI-compatible endpoint) instea
     cd navidrome-vibe
     cp .env.example .env        # edit NAVIDROME_* and your LLM provider
     docker compose up -d
-    # open http://localhost:4546
+    # open http://localhost:4546   (set VIBE_PORT in .env to change the port)
 
 You need a populated analysis DB at `ANALYSIS_DB_PATH` (the analyzer service produces it).
 
